@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
+const morgan = require("morgan");
 const dotenv = require("dotenv");
 
 const HttpError = require("./models/http-error");
@@ -13,6 +14,10 @@ dotenv.config();
 const app = express();
 
 // Middleware
+if (process.env.NODE_ENV !== "test") {
+  //don't show the log when it is test
+  app.use(morgan("combined")); //'combined' outputs the Apache style LOGs
+}
 app.use(bodyParser.json());
 app.use(cookieParser());
 
@@ -47,12 +52,4 @@ app.use((error, req, res, next) => {
   res.json({ message: error.message || "An unkown error occured" });
 });
 
-// first connect to the DB then start the server.
-mongoose
-  .connect(process.env.MONGO_URL)
-  .then(() => {
-    app.listen(process.env.PORT || 5000);
-  })
-  .catch((err) => {
-    console.log(err);
-  });
+module.exports = app;

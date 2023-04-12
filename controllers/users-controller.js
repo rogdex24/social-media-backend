@@ -1,16 +1,28 @@
 const User = require("../models/user");
+const { body, validationResult } = require("express-validator");
 
 const HttpError = require("../models/http-error");
 const mongoose = require("mongoose");
 
 const authenticateUser = async (req, res, next) => {
+  await Promise.all([
+    body("email", "Invalid email").normalizeEmail().isEmail().run(req),
+    body("password", "Password is required").isLength({ min: 6 }).run(req),
+  ]);
+
+  // Check for validation errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    message = errors.array()[0]['msg'];
+    return next(new HttpError(message, 400));
+  }
   const { email, password } = req.body;
 
   let existingUser;
   try {
     existingUser = await User.findOne({ email: email }).select("+password");
   } catch (err) {
-    return next(new HttpError("Something went wrong", 500));
+    return next(new HttpError(err.message, 400));
   }
 
   if (!existingUser) {
@@ -24,15 +36,15 @@ const authenticateUser = async (req, res, next) => {
     try {
       await createdUser.save();
     } catch (err) {
-      return next(new HttpError("Authentication failed", 500));
+      return next(new HttpError(err.message, 500));
     }
     existingUser = createdUser;
   }
 
-  const isMatch = await existingUser.matchPasswords(password);
+  const isMatch = await existingUser.matchPassword(password);
 
   if (!isMatch) {
-    return next(new HttpError("Invalid Credentials", 400));
+    return next(new HttpError("Invalid password", 401));
   }
 
   let token;
@@ -43,11 +55,15 @@ const authenticateUser = async (req, res, next) => {
   }
 
   res.status(200).cookie("token", token).json({
+    user_id: existingUser._id,
     token,
   });
 };
 
 const followUserById = async (req, res, next) => {
+  if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return next(new HttpError("Valid User ID is required", 400));
+  }
   const userToFollowID = req.params.id;
   const currentUserID = req.userData._id;
 
@@ -60,18 +76,17 @@ const followUserById = async (req, res, next) => {
     userToFollow = await User.findById(userToFollowID);
     loggedInUser = await User.findById(currentUserID);
   } catch (err) {
-    return next(new HttpError("Something went wrong", 500));
-  }
+    return next(new HttpError(err.message, 500));
+  } 
 
   if (!userToFollow) {
-    return next(new HttpError("User not found", 404));
+    return next(new HttpError(err.message, 404));
   }
 
   // Transaction
+  const sess = await mongoose.startSession();
+  sess.startTransaction();
   try {
-    const sess = await mongoose.startSession();
-    sess.startTransaction();
-
     if (!loggedInUser.following.includes(userToFollow._id)) {
       loggedInUser.following.push(userToFollow._id);
       userToFollow.followers.push(loggedInUser._id);
@@ -81,7 +96,10 @@ const followUserById = async (req, res, next) => {
     }
     await sess.commitTransaction();
   } catch (err) {
-    return next(new HttpError("Following the user Failed", 500));
+    await sess.abortTransaction();
+    return next(new HttpError(err.message, 500));
+  } finally {
+    sess.endSession();
   }
 
   res.status(200).json({
@@ -90,6 +108,9 @@ const followUserById = async (req, res, next) => {
 };
 
 const unFollowUserById = async (req, res, next) => {
+  if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return next(new HttpError("Valid User ID is required", 400));
+  }
   const userToUnFollowID = req.params.id;
   const currentUserID = req.userData._id;
   if (currentUserID === userToUnFollowID) {
@@ -101,7 +122,7 @@ const unFollowUserById = async (req, res, next) => {
     userToUnFollow = await User.findById(userToUnFollowID);
     loggedInUser = await User.findById(currentUserID);
   } catch (err) {
-    return next(new HttpError("Something went wrong", 500));
+    return next(new HttpError(err.message, 500));
   }
 
   if (!userToUnFollow) {
@@ -109,10 +130,9 @@ const unFollowUserById = async (req, res, next) => {
   }
 
   // Transaction
+  const sess = await mongoose.startSession();
+  sess.startTransaction();
   try {
-    const sess = await mongoose.startSession();
-    sess.startTransaction();
-
     if (loggedInUser.following.includes(userToUnFollow._id)) {
       loggedInUser.following.pull(userToUnFollow);
       userToUnFollow.followers.pull(loggedInUser);
@@ -122,15 +142,17 @@ const unFollowUserById = async (req, res, next) => {
     }
     await sess.commitTransaction();
   } catch (err) {
-    return next(new HttpError("UnFollwing Failed", 500));
+    await sess.abortTransaction();
+    return next(new HttpError(err.message, 500));
+  } finally {
+    sess.endSession();
   }
-
   res.status(200).json({
     message: "User UnFollowed",
   });
 };
 
-const getUserProfile = async (req, res, next) => {
+const getMyUserProfile = async (req, res, next) => {
   const currentUserID = req.userData._id;
   let userProfile;
   try {
@@ -152,5 +174,5 @@ module.exports = {
   authenticateUser,
   followUserById,
   unFollowUserById,
-  getUserProfile,
+  getMyUserProfile,
 };

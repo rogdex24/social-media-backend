@@ -6,7 +6,7 @@ const {
   authenticateUser,
   followUserById,
   unFollowUserById,
-  getUserProfile,
+  getMyUserProfile,
 } = require("../controllers/users-controller");
 
 // Authenticate the user
@@ -22,6 +22,7 @@ router.post("/follow/:id", followUserById);
 router.post("/unfollow/:id", unFollowUserById);
 
 // Return the current user's Profile
-router.get("/user", getUserProfile);
+router.get("/user", getMyUserProfile);
+
 
 module.exports = router;

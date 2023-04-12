@@ -7,6 +7,9 @@ const Post = require("../models/post");
 const User = require("../models/user");
 
 const getPostById = async (req, res, next) => {
+  if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return next(new HttpError("Valid Post ID is required", 400));
+  }
   const postId = req.params.id;
 
   let post;
@@ -21,7 +24,7 @@ const getPostById = async (req, res, next) => {
   }
 
   res.json({
-    post_id: post._id,
+    _id: post._id,
     title: post.title,
     description: post.description,
     likes: post.likes.length,
@@ -30,6 +33,9 @@ const getPostById = async (req, res, next) => {
 };
 
 const createNewPost = async (req, res, next) => {
+  if (!req.body.title || !req.body.description) {
+    return next(new HttpError("title and description are required", 400));
+  }
   const currentUserID = req.userData._id;
   const { title, description } = req.body;
 
@@ -39,21 +45,23 @@ const createNewPost = async (req, res, next) => {
     creator: currentUserID,
   });
 
+  const sess = await mongoose.startSession();
+  sess.startTransaction();
   try {
-    const sess = await mongoose.startSession();
-    sess.startTransaction();
     let user = await User.findById(currentUserID);
     await newPost.save({ session: sess });
     user.posts.unshift(newPost); // add the Post to the user
     await user.save({ session: sess }); // save it
     await sess.commitTransaction();
   } catch (err) {
-    const error = new HttpError("Creating post failed, please try agian", 500);
-    return next(error);
+    await sess.abortTransaction();
+    return next(new HttpError(err.message, 500));
+  } finally {
+    sess.endSession();
   }
 
   res.status(201).json({
-    post_id: newPost._id,
+    _id: newPost._id,
     title: newPost.title,
     description: newPost.description,
     created_time: newPost.createdAt,
@@ -61,6 +69,9 @@ const createNewPost = async (req, res, next) => {
 };
 
 const deletePostById = async (req, res, next) => {
+  if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return next(new HttpError("Valid Post ID is required", 400));
+  }
   const currentUserID = req.userData._id;
   const postId = req.params.id;
 
@@ -98,6 +109,9 @@ const deletePostById = async (req, res, next) => {
 };
 
 const likePostById = async (req, res, next) => {
+  if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return next(new HttpError("Valid Post ID is required", 400));
+  }
   const currentUserID = req.userData._id;
   const postId = req.params.id;
 
@@ -125,6 +139,9 @@ const likePostById = async (req, res, next) => {
 };
 
 const unlikePostById = async (req, res, next) => {
+  if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return next(new HttpError("Valid Post ID is required", 400));
+  }
   const currentUserID = req.userData._id;
   const postId = req.params.id;
 
@@ -152,6 +169,9 @@ const unlikePostById = async (req, res, next) => {
 };
 
 const commentOnPostById = async (req, res, next) => {
+  if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id) || !req.body.comment) {
+    return next(new HttpError("Valid User ID and comment is required", 400));
+  }
   const currentUserID = req.userData._id;
   const postId = req.params.id;
   const { comment } = req.body;
@@ -204,7 +224,7 @@ const getAllMyPosts = async (req, res, next) => {
 
   res.json({
     posts: currentUser.posts.map((post) => ({
-      id: post._id,
+      _id: post._id,
       title: post.title,
       description: post.description,
       created_at: post.createdAt,

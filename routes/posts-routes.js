@@ -4,11 +4,11 @@ const router = express.Router();
 const checkAuth = require("../middleware/check-auth");
 const {getPostById, createNewPost, deletePostById, likePostById, unlikePostById, commentOnPostById, getAllMyPosts} = require("../controllers/posts-controller");
 
+
+router.use(checkAuth);
+
 // GET post by post id
 router.get("/posts/:id", getPostById);
-
-// All endpoint below this require authentication
-router.use(checkAuth);
 
 // Create a post 
 router.post("/posts/", createNewPost);

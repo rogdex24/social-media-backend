@@ -22,7 +22,6 @@ const postSchema = new mongoose.Schema(
     likes: [
       {
         type: ObjectId,
-        unique: true,
         ref: "User",
       },
     ],
@@ -43,6 +42,5 @@ const postSchema = new mongoose.Schema(
   },
   { timestamps: true } // adds createdAt, updatedAt
 );
-
 
 module.exports = mongoose.model("Post", postSchema);
