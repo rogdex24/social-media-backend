@@ -2,10 +2,10 @@
   "name": "socialmedia_app",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "mocha --recursive",
-    "start": "nodemon server.js"
+    "start": "nodemon src/server.js"
   },
   "author": "Abu Talha",
   "license": "ISC",
@@ -18,8 +18,7 @@
     "express-validator": "^6.15.0",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.3",
-    "morgan": "^1.10.0",
-    "uuid": "^9.0.0"
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "chai": "^4.3.7",

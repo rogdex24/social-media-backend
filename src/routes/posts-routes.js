@@ -11,7 +11,7 @@ router.use(checkAuth);
 router.get("/posts/:id", getPostById);
 
 // Create a post 
-router.post("/posts/", createNewPost);
+router.post("/posts", createNewPost);
 
 // Delete a post by post id
 router.delete("/posts/:id", deletePostById);

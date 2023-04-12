@@ -1,7 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-const mongoose = require("mongoose");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
 
@@ -39,7 +38,7 @@ app.use("/api", postsRoutes);
 
 // INVALID ROUTE
 app.use((req, res, next) => {
-  const error = new HttpError("Could not find this route.", 404);
+  const error = new HttpError("Route doesn't Exist.", 404);
   throw error;
 });
 

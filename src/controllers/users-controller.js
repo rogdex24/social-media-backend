@@ -67,8 +67,8 @@ const followUserById = async (req, res, next) => {
   const userToFollowID = req.params.id;
   const currentUserID = req.userData._id;
 
-  if (currentUserID === userToFollowID) {
-    return next(new HttpError("You can't follow yourself", 404));
+  if (currentUserID.toString() === userToFollowID) {
+    return next(new HttpError("You can't follow yourself", 400));
   }
 
   let userToFollow, loggedInUser;
@@ -113,11 +113,11 @@ const unFollowUserById = async (req, res, next) => {
   }
   const userToUnFollowID = req.params.id;
   const currentUserID = req.userData._id;
-  if (currentUserID === userToUnFollowID) {
-    return next(new HttpError("You can't unfollow yourself", 404));
+  if (currentUserID.toString() === userToUnFollowID) {
+    return next(new HttpError("You can't unfollow yourself", 400));
   }
 
-  let userToUnFollow, loggedInUser;
+  let j, loggedInUser;
   try {
     userToUnFollow = await User.findById(userToUnFollowID);
     loggedInUser = await User.findById(currentUserID);
