@@ -1,4 +1,5 @@
-MONGO_URI_TEST="mongodb://127.0.0.1:27017/<DB_NAME>-test?directConnection=true"
-MONGO_URI_DEV="mongodb://127.0.0.1:27017/<DB_NAME>-dev?directConnection=true"
+MONGO_URI="mongodb://127.0.0.1:27017?directConnection=true"
+TEST_DB_NAME="socialMedia-test"
+DEV_DB_NAME="socialMedia-dev"
 JWT_SECRET="superhardtoguess"
 NODE_ENV="dev"
