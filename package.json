@@ -4,8 +4,9 @@
   "description": "",
   "main": "src/server.js",
   "scripts": {
-    "test": "mocha --recursive",
-    "start": "nodemon src/server.js"
+    "test": "mocha --recursive --exit",
+    "watch": "nodemon src/server.js",
+    "start": "node src/server.js"
   },
   "author": "Abu Talha",
   "license": "ISC",

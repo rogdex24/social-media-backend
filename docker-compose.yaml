@@ -1,0 +1,29 @@
+version: '3.9'
+
+services:
+  # MongoDB Service
+  mongo_db:
+    container_name: mongodb
+    image: bitnami/mongodb:5.0
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGODB_REPLICA_SET_MODE: primary
+      ALLOW_EMPTY_PASSWORD: 'yes'
+
+  # NodeJS Service
+  nodejs_api:
+    container_name: nodejs
+    build: .
+    ports:
+      - 5000:5000
+    depends_on:
+      - mongo_db
+    environment:
+      PORT: 5000
+      MONGO_URI: mongodb://mongo_db:27017
+      TEST_DB_NAME: socialMedia-test
+      DEV_DB_NAME: socialMedia-dev
+      JWT_SECRET: superhardtoguess
+      NODE_ENV: dev
