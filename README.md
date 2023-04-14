@@ -1,10 +1,12 @@
 # social-media-backend
 
-## Tech Stack 
+**Tech Stack**: *Node.js, MongoDB*
 
-- NodeJS
-- ExpressJS
-- MongoDB
+- Developed a RESTful API for a social media platform with features such as user authentication (JWT token), following and unfollowing users, posting, deleting posts, liking/unliking posts, and commenting on posts.
+- Ensured data integrity by implementing ACID transactions on MongoDB during post creation, deletion, and updates.
+- Used Mocha and Chai.js to write API tests for code quality and reliability.
+- Containerized the application using Docker for easy deployment and scalability.
+
 
 ## API Endpoints
 
